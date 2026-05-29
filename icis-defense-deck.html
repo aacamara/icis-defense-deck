@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generative AI & Software Developer Performance — Doctoral Defense</title>
+
+<!-- ===========================================
+     FONTS — Aziz Deck preset #13
+     Cormorant Garamond (display) + Inter (body)
+     =========================================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ===========================================
+   CSS CUSTOM PROPERTIES (THEME) — Aziz Deck
+   Black ink on white paper, dark accent slides
+   =========================================== */
+:root {
+    --bg: #ffffff;
+    --bg-alt: #f8f7f4;          /* warm cream for alternating slides */
+    --text: #111111;
+    --text-secondary: #555555;
+    --accent: #000000;          /* pure black — no color accents */
+    --accent-light: #e8e8e8;
+
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Inter', sans-serif;
+
+    /* Typography — all clamp() for viewport fit */
+    --title-size: clamp(2rem, 6vw, 5rem);
+    --h2-size: clamp(1.5rem, 4vw, 3rem);
+    --h3-size: clamp(1.1rem, 2.5vw, 1.5rem);
+    --body-size: clamp(0.8rem, 1.4vw, 1.05rem);
+    --small-size: clamp(0.62rem, 1vw, 0.8rem);
+    --label-size: clamp(0.6rem, 0.95vw, 0.78rem);
+
+    --slide-padding: clamp(1.25rem, 4.5vw, 4.5rem);
+    --content-gap: clamp(0.6rem, 2vw, 1.75rem);
+    --element-gap: clamp(0.3rem, 1vw, 1rem);
+
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-normal: 0.7s;
+    --maxw: 1100px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ===========================================
+   VIEWPORT FITTING: MANDATORY BASE STYLES
+   (full contents of viewport-base.css)
+   =========================================== */
+html, body { height: 100%; overflow-x: hidden; }
+html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.slide-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: 100%;
+    overflow: hidden;
+    padding: var(--slide-padding);
+    width: 100%;
+    max-width: var(--maxw);
+    margin: 0 auto;
+}
+.card, .container, .content-box { max-width: min(90vw, 1000px); max-height: min(80vh, 700px); }
+.feature-list, .bullet-list { gap: clamp(0.4rem, 1vh, 1rem); }
+.feature-list li, .bullet-list li { font-size: var(--body-size); line-height: 1.4; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: clamp(0.5rem, 1.5vw, 1rem); }
+img, .image-container { max-width: 100%; max-height: min(50vh, 400px); object-fit: contain; }
+
+@media (max-height: 700px) {
+    :root {
+        --slide-padding: clamp(0.75rem, 3vw, 2rem);
+        --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+        --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+        --h2-size: clamp(1rem, 3vw, 1.75rem);
+    }
+}
+@media (max-height: 600px) {
+    :root {
+        --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+        --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+        --title-size: clamp(1.1rem, 4vw, 2rem);
+        --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+    }
+    .nav-dots, .keyboard-hint, .decorative { display: none; }
+}
+@media (max-height: 500px) {
+    :root {
+        --slide-padding: clamp(0.4rem, 2vw, 1rem);
+        --title-size: clamp(1rem, 3.5vw, 1.5rem);
+        --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+        --body-size: clamp(0.65rem, 1vw, 0.85rem);
+    }
+}
+@media (max-width: 600px) {
+    :root { --title-size: clamp(1.25rem, 7vw, 2.5rem); }
+    .grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+    html { scroll-behavior: auto; }
+}
+
+/* ===========================================
+   BASE LOOK
+   =========================================== */
+body { font-family: var(--font-body); color: var(--text); background: var(--bg); font-weight: 300; }
+.slide { background: var(--bg); }
+.slide--alt { background: var(--bg-alt); }
+.slide--dark { background: #111; color: #fff; }
+.slide--dark .label, .slide--dark .text-secondary { color: #b8b8b8; }
+
+h1, h2 { font-family: var(--font-display); font-weight: 300; letter-spacing: -0.02em; line-height: 1.05; }
+h1 { font-size: var(--title-size); }
+h2 { font-size: var(--h2-size); margin-bottom: var(--element-gap); }
+h3 { font-family: var(--font-body); font-weight: 600; font-size: var(--h3-size); letter-spacing: -0.01em; }
+p { font-size: var(--body-size); line-height: 1.6; color: var(--text); max-width: 70ch; }
+.slide--dark p { color: #e6e6e6; }
+em, .em { font-style: italic; }
+strong { font-weight: 600; }
+
+/* Eyebrow / kicker labels */
+.label {
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-weight: 500;
+    font-size: var(--label-size);
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: clamp(0.5rem, 1.5vh, 1rem);
+}
+.text-secondary { color: var(--text-secondary); }
+
+/* ===========================================
+   CORNER BRAND MARK (Dauphine) — every slide
+   =========================================== */
+.brand-mark {
+    position: absolute;
+    top: clamp(1rem, 2.5vh, 2rem);
+    left: clamp(1rem, 2.5vw, 2.5rem);
+    height: clamp(16px, 2.2vh, 26px);
+    width: auto;
+    opacity: 0.22;
+    z-index: 50;
+    pointer-events: none;
+}
+.slide--dark .brand-mark { filter: invert(1); opacity: 0.30; }
+.slide.hide-brand .brand-mark { display: none; }
+
+/* ===========================================
+   ANIMATIONS — reveal on .visible
+   =========================================== */
+.reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity var(--duration-normal) var(--ease-out-expo),
+                transform var(--duration-normal) var(--ease-out-expo);
+}
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.slide.visible .reveal:nth-child(1) { transition-delay: 0.05s; }
+.slide.visible .reveal:nth-child(2) { transition-delay: 0.15s; }
+.slide.visible .reveal:nth-child(3) { transition-delay: 0.25s; }
+.slide.visible .reveal:nth-child(4) { transition-delay: 0.35s; }
+.slide.visible .reveal:nth-child(5) { transition-delay: 0.45s; }
+.slide.visible .reveal:nth-child(6) { transition-delay: 0.55s; }
+
+/* Blur-in for quotes */
+.blur-in { filter: blur(8px); opacity: 0; transition: filter 0.9s var(--ease-out-expo), opacity 0.9s var(--ease-out-expo); transition-delay: 0.2s; }
+.slide.visible .blur-in { filter: blur(0); opacity: 1; }
+
+/* ===========================================
+   TITLE SLIDE
+   =========================================== */
+.title-slide .slide-content { justify-content: center; align-items: flex-start; }
+.title-logo { height: clamp(26px, 4.5vh, 52px); width: auto; filter: invert(1); margin-bottom: clamp(1.5rem, 5vh, 3.5rem); }
+.title-slide h1 { max-width: 17ch; margin-bottom: clamp(0.8rem, 2vh, 1.5rem); }
+.title-sub { font-family: var(--font-display); font-style: italic; font-size: clamp(1rem, 2.4vw, 1.6rem); color: #cfcfcf; max-width: 60ch; margin-bottom: clamp(1.5rem, 4vh, 2.75rem); font-weight: 300; }
+.title-meta { display: flex; flex-wrap: wrap; gap: clamp(0.4rem, 1.2vw, 0.9rem); }
+.pill {
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 3px;
+    padding: clamp(0.3rem, 0.9vh, 0.55rem) clamp(0.6rem, 1.4vw, 1rem);
+    font-size: var(--small-size);
+    letter-spacing: 0.04em;
+    color: #eaeaea;
+}
+
+/* ===========================================
+   STAT BLOCKS (animated left border)
+   =========================================== */
+.stat-grid { display: grid; gap: clamp(0.75rem, 2vw, 1.5rem); }
+.stat-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.stat-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 760px) { .stat-grid.cols-3, .stat-grid.cols-2 { grid-template-columns: 1fr 1fr; } }
+
+.stat {
+    position: relative;
+    padding-left: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+.stat::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2px; background: var(--accent);
+    transform: scaleY(0); transform-origin: top;
+    transition: transform 0.8s var(--ease-out-expo);
+}
+.slide--dark .stat::before { background: #fff; }
+.slide.visible .stat::before { transform: scaleY(1); }
+.stat .num { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.8rem, 5vw, 3.4rem); line-height: 1; letter-spacing: -0.02em; }
+.stat .unit { font-family: var(--font-display); font-size: clamp(1rem, 2.2vw, 1.6rem); color: var(--text-secondary); }
+.slide--dark .stat .unit { color: #b8b8b8; }
+.stat .cap { display: block; margin-top: clamp(0.3rem, 1vh, 0.6rem); font-size: var(--small-size); color: var(--text-secondary); line-height: 1.35; }
+.slide--dark .stat .cap { color: #b8b8b8; }
+
+/* ===========================================
+   QUOTE / PULL STATEMENT
+   =========================================== */
+.pull {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(1.4rem, 4vw, 2.6rem);
+    line-height: 1.25;
+    border-left: 3px solid var(--accent);
+    padding-left: clamp(1rem, 2.5vw, 2rem);
+    max-width: 22ch;
+}
+.slide--dark .pull { border-left-color: #fff; }
+
+/* ===========================================
+   BULLET LISTS (editorial)
+   =========================================== */
+.list { list-style: none; display: flex; flex-direction: column; gap: clamp(0.5rem, 1.6vh, 1.1rem); max-width: 64ch; }
+.list li { position: relative; padding-left: clamp(1.1rem, 2vw, 1.5rem); font-size: var(--body-size); line-height: 1.5; color: var(--text); }
+.list li::before { content: ''; position: absolute; left: 0; top: 0.62em; width: clamp(0.5rem,1vw,0.75rem); height: 1px; background: var(--accent); }
+.slide--dark .list li { color: #e6e6e6; }
+.slide--dark .list li::before { background: #fff; }
+.list li strong { font-weight: 600; }
+.list li .sub { display: block; color: var(--text-secondary); font-size: var(--small-size); margin-top: 0.15rem; }
+
+/* ===========================================
+   FRAMEWORK DIAGRAM (CSS, editorial)
+   =========================================== */
+.fw { display: grid; grid-template-columns: 1.1fr auto 1fr; align-items: center; gap: clamp(0.5rem, 2vw, 1.5rem); width: 100%; }
+.fw-col { display: flex; flex-direction: column; gap: clamp(0.5rem, 1.4vh, 0.9rem); }
+.fw-box { border: 1.5px solid var(--accent); border-radius: 4px; padding: clamp(0.5rem, 1.4vw, 1rem) clamp(0.6rem, 1.4vw, 1.1rem); background: var(--bg); }
+.fw-box .t { font-family: var(--font-body); font-weight: 600; font-size: clamp(0.8rem, 1.5vw, 1.05rem); letter-spacing: -0.01em; }
+.fw-box .iv { font-family: var(--font-body); text-transform: uppercase; letter-spacing: 0.14em; font-size: clamp(0.55rem,0.85vw,0.68rem); color: var(--text-secondary); }
+.fw-box .d { font-size: clamp(0.6rem, 1vw, 0.78rem); color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.35; }
+.fw-box.moderator { border-style: dashed; }
+.fw-arrows { display: flex; flex-direction: column; align-items: center; gap: clamp(0.6rem,2vh,1.4rem); color: var(--text-secondary); font-size: var(--small-size); }
+.fw-arrow { display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.fw-arrow .line { width: clamp(1.5rem, 5vw, 4rem); height: 1.5px; background: var(--accent); position: relative; }
+.fw-arrow .line::after { content: '▸'; position: absolute; right: -0.55rem; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 0.8rem; }
+.fw-arrow.dashed .line { background: repeating-linear-gradient(90deg, var(--accent) 0 5px, transparent 5px 9px); }
+.fw-out { border: 1.5px solid var(--accent); border-radius: 4px; padding: clamp(0.6rem,1.6vw,1.1rem); background: var(--bg-alt); }
+.fw-out h4 { font-family: var(--font-body); font-weight: 600; font-size: clamp(0.8rem,1.5vw,1.05rem); margin-bottom: 0.35rem; }
+.fw-out .cluster { font-size: clamp(0.62rem,1vw,0.8rem); color: var(--text-secondary); line-height: 1.4; }
+.fw-out .cluster b { color: var(--text); font-weight: 600; }
+
+/* ===========================================
+   TWO-COLUMN (text + figure)
+   =========================================== */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 3vw, 2.5rem); align-items: center; }
+@media (max-width: 820px) { .two-col { grid-template-columns: 1fr; gap: 1rem; } }
+.fig-frame { border: 1px solid var(--accent-light); border-radius: 4px; padding: clamp(0.4rem,1vw,0.75rem); background: #fff; }
+.fig-frame img { width: 100%; max-height: min(46vh, 360px); display: block; }
+.fig-cap { font-size: var(--small-size); color: var(--text-secondary); margin-top: 0.5rem; line-height: 1.4; font-style: italic; }
+
+/* opposing-mechanism mini cards */
+.mech { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(0.75rem,2vw,1.5rem); }
+@media (max-width:700px){ .mech{ grid-template-columns:1fr; } }
+.mech-card { border: 1px solid var(--accent-light); border-radius: 4px; padding: clamp(0.8rem,2vw,1.4rem); background: var(--bg-alt); }
+.mech-card .sign { font-family: var(--font-display); font-size: clamp(1.5rem,4vw,2.6rem); line-height: 1; }
+.mech-card h3 { margin: 0.3rem 0; }
+.mech-card .coef { font-family: var(--font-body); font-weight: 500; font-size: var(--small-size); letter-spacing: 0.02em; color: var(--text-secondary); }
+.mech-card p { font-size: var(--small-size); margin-top: 0.4rem; }
+
+/* contributions numbered */
+.contribs { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(0.7rem,2vw,1.4rem); }
+@media (max-width:760px){ .contribs{ grid-template-columns:1fr; } }
+.contrib { display: flex; gap: clamp(0.6rem,1.5vw,1.1rem); }
+.contrib .n { font-family: var(--font-display); font-size: clamp(1.6rem,4vw,2.6rem); line-height: 0.9; color: var(--text-secondary); min-width: 1.5ch; }
+.contrib .body h3 { font-size: clamp(0.9rem,1.7vw,1.15rem); margin-bottom: 0.2rem; }
+.contrib .body p { font-size: var(--small-size); }
+
+/* divider rule */
+.rule { width: clamp(2rem,5vw,4rem); height: 2px; background: var(--accent); margin: clamp(0.5rem,1.5vh,1rem) 0; }
+.slide--dark .rule { background: #fff; }
+
+/* ===========================================
+   PROGRESS BAR / NAV DOTS / COUNTER
+   =========================================== */
+.progress-bar { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); width: 0; z-index: 100; transition: width 0.15s linear; }
+.nav-dots { position: fixed; right: clamp(0.8rem,1.8vw,1.5rem); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 0.55rem; z-index: 90; }
+.nav-dots button { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #999; background: transparent; padding: 0; cursor: pointer; transition: background 0.25s, transform 0.25s; }
+.nav-dots button.active { background: var(--accent); transform: scale(1.25); }
+.slide-counter { position: fixed; bottom: clamp(0.8rem,2vh,1.4rem); left: clamp(1rem,2.5vw,2.5rem); font-family: var(--font-body); font-size: var(--small-size); letter-spacing: 0.1em; color: var(--text-secondary); z-index: 90; }
+.scroll-hint { position: absolute; bottom: clamp(1.2rem,3vh,2rem); left: 50%; transform: translateX(-50%); color: #cfcfcf; font-size: 1.4rem; animation: bob 1.6s ease-in-out infinite; transition: opacity 0.6s; }
+@keyframes bob { 0%,100%{ transform: translateX(-50%) translateY(0);} 50%{ transform: translateX(-50%) translateY(8px);} }
+
+/* ===========================================
+   INLINE EDITING (opt-in)
+   =========================================== */
+.edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+.edit-toggle { position: fixed; top: 14px; left: 14px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ccc; background: #fff; font-size: 1.1rem; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 10001; box-shadow: 0 2px 10px rgba(0,0,0,0.12); }
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+.edit-toggle.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+body.editing [contenteditable] { outline: 1px dashed rgba(0,0,0,0.35); outline-offset: 3px; border-radius: 2px; }
+body.editing .slide--dark [contenteditable] { outline-color: rgba(255,255,255,0.5); }
+[contenteditable]:focus { outline: 2px solid var(--accent) !important; background: rgba(0,0,0,0.03); }
+.edit-status { position: fixed; bottom: 14px; right: 14px; background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 4px; font-family: var(--font-body); font-size: 0.75rem; letter-spacing: 0.05em; opacity: 0; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s; z-index: 10001; }
+.edit-status.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- Progress + nav -->
+<div class="progress-bar" id="progressBar"></div>
+<nav class="nav-dots" id="navDots" aria-label="Slide navigation"></nav>
+<div class="slide-counter" id="slideCounter">01 / 15</div>
+
+<!-- Inline editing controls (opt-in) -->
+<div class="edit-hotzone" id="editHotzone"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)">✏️</button>
+<div class="edit-status" id="editStatus">Saved</div>
+
+<!-- ===========================================
+     SLIDE 1 — TITLE (dark)
+     =========================================== -->
+<section class="slide title-slide slide--dark hide-brand">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Université Paris-Dauphine – PSL">
+    <div class="slide-content">
+        <img class="title-logo reveal" src="assets/dauphine.png" alt="Université Paris-Dauphine – PSL">
+        <h1 class="reveal" contenteditable="false">How Does Generative AI Impact Software Developer Performance?</h1>
+        <p class="title-sub reveal" contenteditable="false">Panel evidence on routinization, faithful appropriation, and task–technology fit across 500 repositories and 1.3 million developer-months</p>
+        <div class="title-meta reveal">
+            <span class="pill" contenteditable="false">Doctoral Defense</span>
+            <span class="pill" contenteditable="false">Abdou Aziz Camara</span>
+            <span class="pill" contenteditable="false">Université Paris-Dauphine – PSL · EDBA</span>
+            <span class="pill" contenteditable="false">May 2026</span>
+        </div>
+    </div>
+    <div class="scroll-hint" id="scrollHint">↓</div>
+</section>
+
+<!-- ===========================================
+     SLIDE 2 — THE PUZZLE (dark stat)
+     =========================================== -->
+<section class="slide slide--dark">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">The anomaly</span>
+        <h2 class="reveal" contenteditable="false">The same technology, measured rigorously, produces opposite results.</h2>
+        <div class="rule reveal"></div>
+        <div class="stat-grid cols-3 reveal" style="margin-top:var(--content-gap)">
+            <div class="stat">
+                <div><span class="num"><span class="counter" data-target="56" data-suffix="%">0%</span></span></div>
+                <span class="cap">Faster task completion with AI assistance <em>(Peng et al. 2023, RCT)</em></span>
+            </div>
+            <div class="stat">
+                <div><span class="num">−<span class="counter" data-target="19" data-suffix="%">0%</span></span></div>
+                <span class="cap">Slower for experienced developers on familiar code <em>(Becker et al. 2025)</em></span>
+            </div>
+            <div class="stat">
+                <div><span class="num"><span class="counter" data-target="75" data-suffix="%">0%</span></span></div>
+                <span class="cap">Of organizations report <em>no</em> measurable value from AI investment</span>
+            </div>
+        </div>
+        <p class="reveal" style="margin-top:var(--content-gap)">The 2024 DORA Report documents a historical first: throughput and instability rising <em>together</em>. These contradictions are not noise — they are a signal that our theories lack the vocabulary for a generative, continuously evolving technology.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 3 — THE GAP
+     =========================================== -->
+<section class="slide slide--alt">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">Why existing IS theory falls short</span>
+        <h2 class="reveal" contenteditable="false">A conceptual gap, and a managerial vacuum</h2>
+        <ul class="list reveal" style="margin-top:var(--element-gap)">
+            <li>Dominant frameworks assume <strong>linear</strong> technology–performance relationships and <strong>static</strong> capabilities — GenAI is neither.</li>
+            <li>They <strong>conflate use frequency with use quality</strong> — the <em>how much</em> with the <em>how</em>.</li>
+            <li>They rely on <strong>single-level analyses</strong> that obscure the multi-level dynamics through which AI impact emerges.</li>
+            <li>The result: organizations face multi-million-dollar adoption decisions with <strong>no evidence-based framework</strong> for justification, usage design, or fit assessment.</li>
+        </ul>
+        <p class="reveal" style="margin-top:var(--content-gap)"><strong>Research question.</strong> <em>How does GenAI use affect software delivery performance, and under what conditions does the effect vary?</em></p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 4 — INTEGRATED FRAMEWORK (CSS diagram)
+     =========================================== -->
+<section class="slide">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">The integrated framework</span>
+        <h2 class="reveal" contenteditable="false">Three established streams, one model</h2>
+        <div class="fw reveal" style="margin-top:var(--element-gap)">
+            <div class="fw-col">
+                <div class="fw-box">
+                    <div class="iv">IV₁ · Post-adoption</div>
+                    <div class="t">Routinization</div>
+                    <div class="d">The <em>that</em> of AI use — sustained, integrated activity</div>
+                </div>
+                <div class="fw-box">
+                    <div class="iv">IV₂ · Adaptive Structuration</div>
+                    <div class="t">Faithful Appropriation</div>
+                    <div class="d">The <em>how</em> — use consistent with the tool's augmentation spirit</div>
+                </div>
+                <div class="fw-box moderator">
+                    <div class="iv">Moderator · TTF</div>
+                    <div class="t">Task–Technology Fit</div>
+                    <div class="d">The <em>what</em> — capability × task × developer ability</div>
+                </div>
+            </div>
+            <div class="fw-arrows">
+                <div class="fw-arrow"><span>H1</span><span class="line"></span></div>
+                <div class="fw-arrow"><span>H2</span><span class="line"></span></div>
+                <div class="fw-arrow dashed"><span>H3 / direct</span><span class="line"></span></div>
+            </div>
+            <div class="fw-out">
+                <h4>Developer Performance</h4>
+                <div class="cluster" style="margin-bottom:0.5rem"><b>Throughput</b> — deployment frequency, lead time</div>
+                <div class="cluster"><b>Stability</b> — change failure rate, time to recovery</div>
+                <div class="cluster" style="margin-top:0.6rem; font-style:italic">DORA metrics (Forsgren, Humble & Kim 2018)</div>
+            </div>
+        </div>
+        <p class="reveal" style="margin-top:var(--content-gap); font-size:var(--small-size)"><strong>Asymmetric separation thesis:</strong> routinization dominantly predicts <em>throughput</em>; faithful appropriation dominantly predicts <em>stability</em>. Solid = confirmatory · dashed = exploratory.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 5 — HYPOTHESES
+     =========================================== -->
+<section class="slide slide--alt">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">Falsifiable claims</span>
+        <h2 class="reveal" contenteditable="false">Hypotheses</h2>
+        <ul class="list reveal" style="margin-top:var(--element-gap)">
+            <li><strong>H1 — Routinization → Throughput.</strong> Routinized GenAI use raises throughput, with diminishing returns (linear <em>and</em> quadratic forms specified a priori).</li>
+            <li><strong>H2 — Faithful Appropriation → Stability.</strong> Faithful use improves stability <em>beyond routinization alone</em>, via review discipline and selective application.</li>
+            <li><strong>H3 — Task–Technology Fit moderates both</strong> relationships; the direct TTF→performance path is tested exploratorily.</li>
+            <li><strong>H1c / H2c — Cross-effects.</strong> Their (a)symmetry decides whether separation holds in <em>strict</em>, <em>dominant-but-not-exclusive</em>, or <em>rejected</em> form.</li>
+        </ul>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 6 — RESEARCH DESIGN & DATA (stats)
+     =========================================== -->
+<section class="slide">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">Research design &amp; data</span>
+        <h2 class="reveal" contenteditable="false">A quasi-experiment around the ChatGPT shock</h2>
+        <div class="stat-grid cols-3 reveal" style="margin-top:var(--content-gap)">
+            <div class="stat"><div><span class="num"><span class="counter" data-target="500">0</span></span></div><span class="cap">Organizational repositories · 85% adopted AI, 15% never-treated</span></div>
+            <div class="stat"><div><span class="num"><span class="counter" data-target="87">0</span></span></div><span class="cap">Months of panel data · Jan 2019 – Mar 2026, across three AI eras</span></div>
+            <div class="stat"><div><span class="num"><span class="counter" data-target="1.3" data-decimals="1">0</span></span><span class="unit">M</span></div><span class="cap">Developer-month observations for within-developer fixed effects</span></div>
+            <div class="stat"><div><span class="num"><span class="counter" data-target="40214">0</span></span></div><span class="cap">AI tool detections — co-author tags + comment mentions</span></div>
+            <div class="stat"><div><span class="num"><span class="counter" data-target="3.97" data-decimals="2">0</span></span><span class="unit">M</span></div><span class="cap">Commits scanned across all 500 repositories</span></div>
+            <div class="stat"><div><span class="num"><span class="counter" data-target="14">0</span></span></div><span class="cap">AI tools detected, classified agentic vs. assistive</span></div>
+        </div>
+        <p class="reveal" style="margin-top:var(--content-gap); font-size:var(--small-size)">Two-way fixed effects · Sun–Abraham &amp; Callaway–Sant'Anna event studies · IV (lagged intensity) · propensity-score matching · 1,000-draw placebo (0% false positives) · R↔Stata replication to six decimals.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 7 — H1: INVERTED-U (text + figure)
+     =========================================== -->
+<section class="slide slide--alt">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">Finding 1 · Routinization</span>
+        <h2 class="reveal" contenteditable="false">Throughput follows an inverted-U</h2>
+        <div class="two-col" style="margin-top:var(--element-gap)">
+            <div>
+                <ul class="list reveal">
+                    <li>Linear model: a misleading near-zero null (β = −0.025, p = .057).</li>
+                    <li>Quadratic model: a strong inverted-U — rising term (β₁ = +0.216, p &lt; .001), falling term (β₂ = −0.030, p = .001).</li>
+                    <li><strong>Peak benefit at ~3.6 months</strong> of cumulative routinization, then decline.</li>
+                    <li><strong>H1c null</strong> (p = .644): the dynamic does <em>not</em> extend to quality — separation holds on the routinization side.</li>
+                </ul>
+            </div>
+            <div class="reveal">
+                <div class="fig-frame">
+                    <img src="assets/fig8_dose_response.png" alt="Dose–response of AI intensity on DORA metrics">
+                </div>
+                <div class="fig-cap">Dose–response: effects on DORA metrics by AI-intensity bin, relative to no AI (95% CI).</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 8 — H2: OPPOSING MECHANISMS
+     =========================================== -->
+<section class="slide">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">Finding 2 · Faithful Appropriation</span>
+        <h2 class="reveal" contenteditable="false">One composite, two opposing mechanisms</h2>
+        <div class="mech reveal" style="margin-top:var(--content-gap)">
+            <div class="mech-card">
+                <div class="sign">−</div>
+                <h3>Review discipline</h3>
+                <div class="coef">β = −0.045 on CFR · p = .027</div>
+                <p>The quality gate works as theorized: gatekeeping catches defects before they ship.</p>
+            </div>
+            <div class="mech-card">
+                <div class="sign">+</div>
+                <h3>Iterative refinement</h3>
+                <div class="coef">β = +0.144 on CFR · p = .004</div>
+                <p>Signals <em>reactive</em> debugging, not proactive refinement — developers iterate after problems surface.</p>
+            </div>
+        </div>
+        <p class="reveal" style="margin-top:var(--content-gap)">The opposing components cancel in the composite (a classic suppression pattern). <strong>H2 is partially supported:</strong> review discipline operates as theorized, but the two-indicator FAI does not behave as a unitary construct.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 9 — H3 / TTF DIRECT EFFECT (anchor)
+     =========================================== -->
+<section class="slide slide--alt">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">Finding 3 · The empirical anchor</span>
+        <h2 class="reveal" contenteditable="false">Task–technology fit works <em>directly</em>, not as a moderator</h2>
+        <div class="two-col" style="margin-top:var(--element-gap)">
+            <div>
+                <ul class="list reveal">
+                    <li>Moderation is null (p = .089, p = .712) — <strong>H3 as stated is not supported.</strong></li>
+                    <li>But the exploratory <strong>direct</strong> path is the strongest finding in the study: TTF lowers change failure rate, β = −0.307, <strong>p &lt; .001</strong>.</li>
+                    <li>Bugs-only effect is ~3× larger (β = −0.880) — TTF prevents bugs upstream, not just reverts.</li>
+                    <li><strong>Developer experience</strong> is the active dimension — reconceptualized as a <em>fit</em> dimension, not a context-free moderator.</li>
+                </ul>
+            </div>
+            <div class="reveal">
+                <div class="fig-frame">
+                    <img src="assets/corrected_fig5_heatmap_rout_fai_cfr.png" alt="Predicted CFR by routinization × FAI in high-TTF subsample">
+                </div>
+                <div class="fig-cap">Predicted change failure rate by routinization × FAI in the high-TTF subsample.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 10 — TOOL-CLASS HETEROGENEITY
+     =========================================== -->
+<section class="slide">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">Finding 4 · Not all AI is alike</span>
+        <h2 class="reveal" contenteditable="false">Agentic vs. assistive tools diverge</h2>
+        <ul class="list reveal" style="margin-top:var(--element-gap)">
+            <li><strong>Agentic AI</strong> (Claude Code, Codex, Devin) is associated with <strong>lower change failure rate</strong> at the org level (β = −0.021, p = .015) — the second-strongest org-level finding.</li>
+            <li><strong>Assistive AI</strong> (Copilot, Cursor, ChatGPT) shows a <strong>null</strong> quality effect (β = −0.002, p = .629).</li>
+            <li>Five of seven tools lift merged-PR volume by <strong>+21% to +29%</strong>.</li>
+            <li><strong>Amazon Q</strong> is the lone speed–quality tradeoff: +88% throughput <em>and</em> +7.1pp failure rate.</li>
+        </ul>
+        <p class="reveal" style="margin-top:var(--content-gap)">Implication: teams with stronger task-routing governance capture agentic tools' advantage; looser teams may benefit more from assistive deployments.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 11 — ECOLOGICAL FALLACY (dark, headline)
+     =========================================== -->
+<section class="slide slide--dark">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">The methodological headline</span>
+        <h2 class="reveal" contenteditable="false">The ecological fallacy in AI-productivity research</h2>
+        <p class="reveal" style="margin-top:var(--element-gap)">Re-estimated within-developer (1.3M observations), the organizational story <em>reverses</em>:</p>
+        <div class="stat-grid cols-3 reveal" style="margin-top:var(--content-gap)">
+            <div class="stat"><div><span class="num">⇄</span></div><span class="cap"><strong>Throughput</strong> — org-level positive flips to individual-level negative (β = −0.055, p = .013)</span></div>
+            <div class="stat"><div><span class="num">⇄</span></div><span class="cap"><strong>Lead time</strong> — org-level longer flips to individual-level shorter (β = −0.108, p = .001)</span></div>
+            <div class="stat"><div><span class="num">→0</span></div><span class="cap"><strong>Agentic quality benefit</strong> attenuates to null within developers (p = .784)</span></div>
+        </div>
+        <p class="reveal" style="margin-top:var(--content-gap)">Selection, composition, and cohort effects drive the divergence. <strong>Single-level designs cannot detect cross-level reconfiguration</strong> — multi-level estimation must become standard practice.</p>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 12 — CONTRIBUTIONS
+     =========================================== -->
+<section class="slide">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">Theoretical contributions</span>
+        <h2 class="reveal" contenteditable="false">Four contributions to IS theory</h2>
+        <div class="contribs reveal" style="margin-top:var(--content-gap)">
+            <div class="contrib"><div class="n">1</div><div class="body"><h3>The Faithful Appropriation Index</h3><p>Operationalizes a 30-year-old AST construct from behavioral Git traces — at scale, continuously, without surveys.</p></div></div>
+            <div class="contrib"><div class="n">2</div><div class="body"><h3>The asymmetric separation thesis</h3><p>Routinization and appropriation are distinct constructs (r = .087) with different <em>dominant</em> performance consequences.</p></div></div>
+            <div class="contrib"><div class="n">3</div><div class="body"><h3>Experience as a TTF dimension</h3><p>Reconciles contradictory field evidence by restoring Goodhue &amp; Thompson's task–technology–ability alignment.</p></div></div>
+            <div class="contrib"><div class="n">4</div><div class="body"><h3>The DORA paradox is a low-fit phenomenon</h3><p>Throughput-without-stability is specific to low task–technology fit — not a universal consequence of AI.</p></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 13 — PRACTICAL IMPLICATIONS
+     =========================================== -->
+<section class="slide slide--alt">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">For engineering leaders</span>
+        <h2 class="reveal" contenteditable="false">What to do with this</h2>
+        <ul class="list reveal" style="margin-top:var(--element-gap)">
+            <li><strong>Invest in depth, not breadth.</strong> A 25.6pp gap separates casual (−7.5%) from heavy (+18.1%) users — shallow rollouts can reduce aggregate productivity.</li>
+            <li><strong>Target newer developers first.</strong> A 42-month tenure crossover justifies tenure-differentiated deployment.</li>
+            <li><strong>Monitor review discipline alongside throughput.</strong> Review <em>depth</em> matters more than breadth; pressure on speed short-circuits the quality gate.</li>
+            <li><strong>Differentiate tools by task and governance.</strong> Agentic where routing is strong; assistive where it is loose.</li>
+        </ul>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 14 — LIMITATIONS
+     =========================================== -->
+<section class="slide">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <span class="label reveal">Honesty about scope</span>
+        <h2 class="reveal" contenteditable="false">Limitations &amp; boundary conditions</h2>
+        <ul class="list reveal" style="margin-top:var(--element-gap)">
+            <li><strong>Measurement.</strong> Silent AI adoption is unobserved; the FAI captures behavioral signals, not the cognitive substance of appropriation.</li>
+            <li><strong>Generalizability.</strong> Open-source review cultures may differ from policy-mandated enterprise review; the individual panel is visibility-selected.</li>
+            <li><strong>Identification.</strong> Despite event studies, IV, PSM, and placebo tests, the design remains observational.</li>
+            <li><strong>Temporal scope.</strong> The agentic-AI era spans only six months — cross-level findings should be replicated as it matures.</li>
+        </ul>
+    </div>
+</section>
+
+<!-- ===========================================
+     SLIDE 15 — CONCLUSION / CLOSING (dark)
+     =========================================== -->
+<section class="slide slide--dark hide-brand">
+    <img class="brand-mark" src="assets/dauphine.png" alt="Dauphine">
+    <div class="slide-content">
+        <img class="title-logo reveal" src="assets/dauphine.png" alt="Université Paris-Dauphine – PSL" style="margin-bottom:clamp(1rem,3vh,2rem)">
+        <p class="pull blur-in" contenteditable="false">AI's impact on knowledge work is not a question of adoption — but of how human and machine capability are governed and made to coexist.</p>
+        <div class="rule reveal" style="margin-top:var(--content-gap)"></div>
+        <p class="reveal" style="margin-top:var(--element-gap)">Routinization bends throughput in an inverted-U. Faithful appropriation splits into opposing mechanisms. Task–technology fit works directly. And the org-level story reverses within developers.</p>
+        <div class="title-meta reveal" style="margin-top:var(--content-gap)">
+            <span class="pill" contenteditable="false">Thank you</span>
+            <span class="pill" contenteditable="false">Questions welcome</span>
+            <span class="pill" contenteditable="false">Abdou Aziz Camara · Université Paris-Dauphine – PSL</span>
+        </div>
+    </div>
+</section>
+
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   Intersection observer, keyboard/touch/wheel nav,
+   progress bar, nav dots, slide counter, counters.
+   =========================================== */
+class SlidePresentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.current = 0;
+        this.isAnimating = false;
+        this.observer = null;
+        this.setupObserver();
+        this.setupNavDots();
+        this.setupKeyboard();
+        this.setupTouch();
+        this.setupWheel();
+        this.setupScrollTracking();
+        this.fadeScrollHint();
+    }
+
+    /* Reveal animations + counters when a slide enters view */
+    setupObserver() {
+        this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting && e.intersectionRatio > 0.5) {
+                    e.target.classList.add('visible');
+                    this.runCounters(e.target);
+                }
+            });
+        }, { threshold: [0.5] });
+        this.slides.forEach(s => this.observer.observe(s));
+        // First slide visible immediately
+        this.slides[0].classList.add('visible');
+        this.runCounters(this.slides[0]);
+    }
+
+    /* Animated number counters (count up from 0) */
+    runCounters(slide) {
+        slide.querySelectorAll('.counter').forEach(el => {
+            if (el.dataset.done) return;
+            el.dataset.done = '1';
+            const target = parseFloat(el.dataset.target);
+            const decimals = parseInt(el.dataset.decimals || '0', 10);
+            const suffix = el.dataset.suffix || '';
+            const dur = 1300, start = performance.now();
+            const fmt = (v) => {
+                if (decimals > 0) return v.toFixed(decimals);
+                return Math.round(v).toLocaleString('en-US');
+            };
+            const tick = (now) => {
+                const p = Math.min((now - start) / dur, 1);
+                const eased = 1 - Math.pow(1 - p, 3); /* easeOutCubic */
+                el.textContent = fmt(target * eased) + suffix;
+                if (p < 1) requestAnimationFrame(tick);
+                else el.textContent = fmt(target) + suffix;
+            };
+            requestAnimationFrame(tick);
+        });
+    }
+
+    setupNavDots() {
+        const nav = document.getElementById('navDots');
+        this.slides.forEach((s, i) => {
+            const b = document.createElement('button');
+            b.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+            if (i === 0) b.classList.add('active');
+            b.addEventListener('click', () => this.goTo(i));
+            nav.appendChild(b);
+        });
+        this.dots = Array.from(nav.children);
+    }
+
+    goTo(i) {
+        i = Math.max(0, Math.min(this.slides.length - 1, i));
+        this.slides[i].scrollIntoView({ behavior: 'smooth' });
+    }
+
+    setupKeyboard() {
+        document.addEventListener('keydown', (e) => {
+            if (e.target.getAttribute('contenteditable') === 'true') return;
+            if (['ArrowDown', 'ArrowRight', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); this.goTo(this.current + 1); }
+            else if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); this.goTo(this.current - 1); }
+            else if (e.key === 'Home') { e.preventDefault(); this.goTo(0); }
+            else if (e.key === 'End') { e.preventDefault(); this.goTo(this.slides.length - 1); }
+        });
+    }
+
+    setupTouch() {
+        let startY = 0;
+        document.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            const dy = startY - e.changedTouches[0].clientY;
+            if (Math.abs(dy) > 50) this.goTo(this.current + (dy > 0 ? 1 : -1));
+        }, { passive: true });
+    }
+
+    /* Wheel nav with cooldown (complements native scroll-snap) */
+    setupWheel() {
+        let lock = false;
+        window.addEventListener('wheel', (e) => {
+            if (document.body.classList.contains('editing')) return;
+            if (lock) return;
+            if (Math.abs(e.deltaY) < 18) return;
+            lock = true;
+            this.goTo(this.current + (e.deltaY > 0 ? 1 : -1));
+            setTimeout(() => { lock = false; }, 700);
+        }, { passive: true });
+    }
+
+    /* Track active slide for progress bar, dots, counter */
+    setupScrollTracking() {
+        const bar = document.getElementById('progressBar');
+        const counter = document.getElementById('slideCounter');
+        const total = this.slides.length;
+        const pad = (n) => String(n).padStart(2, '0');
+        const update = () => {
+            const idx = Math.round(window.scrollY / window.innerHeight);
+            this.current = Math.max(0, Math.min(total - 1, idx));
+            bar.style.width = ((this.current) / (total - 1) * 100) + '%';
+            counter.textContent = pad(this.current + 1) + ' / ' + pad(total);
+            if (this.dots) this.dots.forEach((d, i) => d.classList.toggle('active', i === this.current));
+        };
+        window.addEventListener('scroll', () => { window.requestAnimationFrame(update); }, { passive: true });
+        update();
+    }
+
+    fadeScrollHint() {
+        const hint = document.getElementById('scrollHint');
+        if (!hint) return;
+        setTimeout(() => { hint.style.opacity = '0'; }, 3500);
+    }
+}
+
+/* ===========================================
+   INLINE EDITOR — opt-in (E key / hover hotzone)
+   contenteditable + localStorage autosave + export
+   =========================================== */
+class InlineEditor {
+    constructor() {
+        this.isActive = false;
+        this.STORAGE_KEY = 'icis-defense-deck-edits';
+        this.editables = Array.from(document.querySelectorAll('[contenteditable]'));
+        this.editables.forEach((el, i) => el.dataset.eid = 'e' + i);
+        this.statusEl = document.getElementById('editStatus');
+        this.loadEdits();
+        this.bindControls();
+    }
+
+    toggleEditMode() {
+        this.isActive = !this.isActive;
+        document.body.classList.toggle('editing', this.isActive);
+        document.getElementById('editToggle').classList.toggle('active', this.isActive);
+        this.editables.forEach(el => el.setAttribute('contenteditable', this.isActive ? 'true' : 'false'));
+        if (this.isActive) { document.documentElement.style.scrollSnapType = 'none'; this.flash('Edit mode on — click any text'); }
+        else { document.documentElement.style.scrollSnapType = 'y mandatory'; this.saveEdits(); this.flash('Saved'); }
+    }
+
+    saveEdits() {
+        const data = {};
+        this.editables.forEach(el => { data[el.dataset.eid] = el.innerHTML; });
+        try { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+    }
+
+    loadEdits() {
+        let data;
+        try { data = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}'); } catch (e) { data = {}; }
+        this.editables.forEach(el => { if (data[el.dataset.eid] != null) el.innerHTML = data[el.dataset.eid]; });
+    }
+
+    flash(msg) {
+        this.statusEl.textContent = msg;
+        this.statusEl.classList.add('show');
+        clearTimeout(this._t);
+        this._t = setTimeout(() => this.statusEl.classList.remove('show'), 1600);
+    }
+
+    /* Export the live DOM as a standalone HTML file */
+    exportFile() {
+        this.saveEdits();
+        const clone = document.documentElement.cloneNode(true);
+        clone.querySelectorAll('.edit-status').forEach(n => n.classList.remove('show'));
+        const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+        const blob = new Blob([html], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'icis-defense-deck-edited.html';
+        a.click();
+        this.flash('Exported file');
+    }
+
+    bindControls() {
+        const toggle = document.getElementById('editToggle');
+        const hotzone = document.getElementById('editHotzone');
+        let hideTimeout = null;
+
+        toggle.addEventListener('click', () => this.toggleEditMode());
+        hotzone.addEventListener('click', () => this.toggleEditMode());
+
+        hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); toggle.classList.add('show'); });
+        hotzone.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!this.isActive) toggle.classList.remove('show'); }, 400); });
+        toggle.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+        toggle.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!this.isActive) toggle.classList.remove('show'); }, 400); });
+
+        document.addEventListener('keydown', (e) => {
+            const editing = e.target.getAttribute('contenteditable') === 'true';
+            if ((e.key === 'e' || e.key === 'E') && !editing) { e.preventDefault(); this.toggleEditMode(); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); if (this.isActive) { this.saveEdits(); this.flash('Saved'); } }
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'e' || e.key === 'E')) { e.preventDefault(); this.exportFile(); }
+        });
+
+        /* autosave while typing */
+        this.editables.forEach(el => el.addEventListener('input', () => { clearTimeout(this._save); this._save = setTimeout(() => this.saveEdits(), 600); }));
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    new SlidePresentation();
+    window.editor = new InlineEditor();
+});
+</script>
+</body>
+</html>
