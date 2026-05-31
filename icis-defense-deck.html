@@ -743,29 +743,27 @@ class SlidePresentation {
     }
 
     /* Deterministic navigation by index.
-       CSS scroll-snap: y mandatory fights a programmatic smooth scrollTo and
-       yanks it back to the current snap point mid-animation. So we briefly
-       disable snap for the duration of the scripted scroll, then restore it
-       (which keeps native trackpad/wheel/touch snapping intact otherwise). */
+       Uses scrollIntoView (NOT window.scrollTo): viewport-base.css sets
+       html,body{height:100%}, which makes <body> the scroll container, so
+       window.scrollTo is a no-op. scrollIntoView resolves the correct
+       scroller automatically and is robust to that. */
     goTo(i) {
         i = Math.max(0, Math.min(this.slides.length - 1, i));
         this.current = i;
-        const root = document.documentElement;
-        if (!document.body.classList.contains('editing')) {
-            root.style.scrollSnapType = 'none';
-            clearTimeout(this._snapRestore);
-            this._snapRestore = setTimeout(() => { root.style.scrollSnapType = 'y mandatory'; }, 650);
-        }
-        window.scrollTo({ top: i * window.innerHeight, behavior: 'smooth' });
+        this.slides[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    /* Index of the slide currently filling the viewport, derived from the
-       live scroll position. Using this (instead of a tracked counter that can
-       drift out of sync during smooth scrolls) makes every keypress advance
-       relative to where the deck ACTUALLY is. */
+    /* Index of the slide currently filling the viewport — the one whose top
+       edge is nearest the viewport top. Rect-based so it works regardless of
+       which element is the scroll container, and never drifts out of sync the
+       way a tracked counter does during smooth scrolls. */
     activeIndex() {
-        return Math.max(0, Math.min(this.slides.length - 1,
-            Math.round(window.scrollY / window.innerHeight)));
+        let best = 0, bestDist = Infinity;
+        this.slides.forEach((s, i) => {
+            const d = Math.abs(s.getBoundingClientRect().top);
+            if (d < bestDist) { bestDist = d; best = i; }
+        });
+        return best;
     }
 
     setupKeyboard() {
@@ -778,29 +776,30 @@ class SlidePresentation {
         });
     }
 
-    /* Track active slide from scroll position (for bar, dots, counter) */
+    /* Track active slide (for bar, dots, counter). Rect-based via activeIndex,
+       and listens with capture so it catches scroll from whichever element is
+       the scroll container (window OR body). */
     setupScrollTracking() {
         const bar = document.getElementById('progressBar');
         const counter = document.getElementById('slideCounter');
         const total = this.slides.length;
         const pad = (n) => String(n).padStart(2, '0');
         const update = () => {
-            const idx = Math.round(window.scrollY / window.innerHeight);
-            this.current = Math.max(0, Math.min(total - 1, idx));
+            this.current = this.activeIndex();
             bar.style.width = (this.current / (total - 1) * 100) + '%';
             counter.textContent = pad(this.current + 1) + ' / ' + pad(total);
             if (this.dots) this.dots.forEach((d, i) => d.classList.toggle('active', i === this.current));
         };
-        window.addEventListener('scroll', () => window.requestAnimationFrame(update), { passive: true });
+        document.addEventListener('scroll', () => window.requestAnimationFrame(update), { passive: true, capture: true });
         update();
     }
 
-    /* Keep the current slide aligned when the window resizes */
+    /* Re-align the current slide after a resize */
     setupResize() {
         let t;
         window.addEventListener('resize', () => {
             clearTimeout(t);
-            t = setTimeout(() => window.scrollTo({ top: this.current * window.innerHeight }), 150);
+            t = setTimeout(() => this.slides[this.current].scrollIntoView({ block: 'start' }), 150);
         });
     }
 
