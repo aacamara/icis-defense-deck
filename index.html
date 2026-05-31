@@ -61,6 +61,7 @@ html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
     height: 100dvh;
     overflow: hidden;
     scroll-snap-align: start;
+    scroll-snap-stop: always; /* never skip a slide on a single gesture */
     display: flex;
     flex-direction: column;
     position: relative;
@@ -673,21 +674,23 @@ body.editing .slide--dark [contenteditable] { outline-color: rgba(255,255,255,0.
 <script>
 /* ===========================================
    SLIDE PRESENTATION CONTROLLER
-   Intersection observer, keyboard/touch/wheel nav,
-   progress bar, nav dots, slide counter, counters.
+   Navigation model:
+   - CSS scroll-snap (y mandatory + snap-stop always) drives
+     trackpad, mouse-wheel, and touch natively and reliably.
+   - Keyboard + nav dots call goTo(), which uses window.scrollTo
+     by index (more reliable than scrollIntoView under snap).
+   - NO custom wheel/touch handlers — they previously fought
+     scroll-snap and caused skipping / getting stuck between slides.
    =========================================== */
 class SlidePresentation {
     constructor() {
         this.slides = Array.from(document.querySelectorAll('.slide'));
         this.current = 0;
-        this.isAnimating = false;
-        this.observer = null;
         this.setupObserver();
         this.setupNavDots();
         this.setupKeyboard();
-        this.setupTouch();
-        this.setupWheel();
         this.setupScrollTracking();
+        this.setupResize();
         this.fadeScrollHint();
     }
 
@@ -702,7 +705,6 @@ class SlidePresentation {
             });
         }, { threshold: [0.5] });
         this.slides.forEach(s => this.observer.observe(s));
-        // First slide visible immediately
         this.slides[0].classList.add('visible');
         this.runCounters(this.slides[0]);
     }
@@ -716,10 +718,7 @@ class SlidePresentation {
             const decimals = parseInt(el.dataset.decimals || '0', 10);
             const suffix = el.dataset.suffix || '';
             const dur = 1300, start = performance.now();
-            const fmt = (v) => {
-                if (decimals > 0) return v.toFixed(decimals);
-                return Math.round(v).toLocaleString('en-US');
-            };
+            const fmt = (v) => decimals > 0 ? v.toFixed(decimals) : Math.round(v).toLocaleString('en-US');
             const tick = (now) => {
                 const p = Math.min((now - start) / dur, 1);
                 const eased = 1 - Math.pow(1 - p, 3); /* easeOutCubic */
@@ -743,9 +742,11 @@ class SlidePresentation {
         this.dots = Array.from(nav.children);
     }
 
+    /* Deterministic navigation by index — reliable under scroll-snap */
     goTo(i) {
         i = Math.max(0, Math.min(this.slides.length - 1, i));
-        this.slides[i].scrollIntoView({ behavior: 'smooth' });
+        this.current = i;
+        window.scrollTo({ top: i * window.innerHeight, behavior: 'smooth' });
     }
 
     setupKeyboard() {
@@ -758,29 +759,7 @@ class SlidePresentation {
         });
     }
 
-    setupTouch() {
-        let startY = 0;
-        document.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
-        document.addEventListener('touchend', (e) => {
-            const dy = startY - e.changedTouches[0].clientY;
-            if (Math.abs(dy) > 50) this.goTo(this.current + (dy > 0 ? 1 : -1));
-        }, { passive: true });
-    }
-
-    /* Wheel nav with cooldown (complements native scroll-snap) */
-    setupWheel() {
-        let lock = false;
-        window.addEventListener('wheel', (e) => {
-            if (document.body.classList.contains('editing')) return;
-            if (lock) return;
-            if (Math.abs(e.deltaY) < 18) return;
-            lock = true;
-            this.goTo(this.current + (e.deltaY > 0 ? 1 : -1));
-            setTimeout(() => { lock = false; }, 700);
-        }, { passive: true });
-    }
-
-    /* Track active slide for progress bar, dots, counter */
+    /* Track active slide from scroll position (for bar, dots, counter) */
     setupScrollTracking() {
         const bar = document.getElementById('progressBar');
         const counter = document.getElementById('slideCounter');
@@ -789,12 +768,21 @@ class SlidePresentation {
         const update = () => {
             const idx = Math.round(window.scrollY / window.innerHeight);
             this.current = Math.max(0, Math.min(total - 1, idx));
-            bar.style.width = ((this.current) / (total - 1) * 100) + '%';
+            bar.style.width = (this.current / (total - 1) * 100) + '%';
             counter.textContent = pad(this.current + 1) + ' / ' + pad(total);
             if (this.dots) this.dots.forEach((d, i) => d.classList.toggle('active', i === this.current));
         };
-        window.addEventListener('scroll', () => { window.requestAnimationFrame(update); }, { passive: true });
+        window.addEventListener('scroll', () => window.requestAnimationFrame(update), { passive: true });
         update();
+    }
+
+    /* Keep the current slide aligned when the window resizes */
+    setupResize() {
+        let t;
+        window.addEventListener('resize', () => {
+            clearTimeout(t);
+            t = setTimeout(() => window.scrollTo({ top: this.current * window.innerHeight }), 150);
+        });
     }
 
     fadeScrollHint() {
@@ -881,7 +869,6 @@ class InlineEditor {
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'e' || e.key === 'E')) { e.preventDefault(); this.exportFile(); }
         });
 
-        /* autosave while typing */
         this.editables.forEach(el => el.addEventListener('input', () => { clearTimeout(this._save); this._save = setTimeout(() => this.saveEdits(), 600); }));
     }
 }
